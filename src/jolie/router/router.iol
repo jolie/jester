@@ -40,6 +40,7 @@ type Resource:void {
 
 type Config:void {
 	.host:string
+	.outputPort:string
 	.routes*:Route
 	.resources*:Resource
 }

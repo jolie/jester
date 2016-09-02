@@ -1,6 +1,8 @@
+
 /*
 The MIT License (MIT)
 Copyright (c) 2016 Fabrizio Montesi <famontesi@gmail.com>
+Copyright (c) 2016 Claudio Guidi <guidiclaudio@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -20,35 +22,36 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-/**
-Remember to include the definition of the output port towards the model.
-*/
-// include "app.iol"
-
 include "uri_templates.iol"
 include "reflection.iol"
 include "console.iol"
+include "string_utils.iol"
+
 include "router.iol"
-include "protocols/http.iol"
+include "locations.iol"
 
 execution { concurrent }
 
+include "router_import.ol"
+
 interface WebIface {
 RequestResponse:
-	get(DefaultOperationHttpRequest)(undefined),
-	post(DefaultOperationHttpRequest)(undefined),
-	put(DefaultOperationHttpRequest)(undefined),
-	delete(DefaultOperationHttpRequest)(undefined)
+	get, post, put, delete, options
 }
 
 inputPort WebInput {
-Location: "socket://localhost:8080"
+Location: API_ROUTER
 Protocol: http {
+	.debug=true;.debug.showContent=true;
 	.default.get = "get";
 	.default.post = "post";
 	.default.put = "put";
 	.default.delete = "delete";
+	.default.options = "options";
 	.method -> method;
+	.response.headers.("Access-Control-Allow-Methods") = "POST,GET,DELETE,PUT,OPTIONS";
+	.response.headers.("Access-Control-Allow-Origin") = "*";
+	.response.headers.("Access-Control-Allow-Headers") = "Content-Type";
 	.statusCode -> statusCode;
 	.format = "json"
 }
@@ -60,55 +63,71 @@ Location: "local"
 Interfaces: RouterIface
 }
 
-define addResourceRoutes
-{
-	routes[#routes] << {
-		.method = "get",
-		.template = resource.template,
-		.operation = resource.name + "_index"
-	};
-	routes[#routes] << {
-		.method = "get",
-		.template = resource.template + "/{" + resource.id + "}",
-		.operation = resource.name + "_show"
-	};
-	routes[#routes] << {
-		.method = "post",
-		.template = resource.template,
-		.operation = resource.name + "_create"
-	};
-	routes[#routes] << {
-		.method = "put",
-		.template = resource.template + "/{" + resource.id + "}",
-		.operation = resource.name + "_update"
-	};
-	routes[#routes] << {
-		.method = "delete",
-		.template = resource.template + "/{" + resource.id + "}",
-		.operation = resource.name + "_destroy"
-	}
+define split_urls {
+  // __input_str
+	undef( __str_elements );
+  split_str = __input_str;
+  split_str.regex = "/";
+  split@StringUtils( split_str )( splitted_str );
+  __str_elements.element << splitted_str.result;
+  split_str = splitted_str.result[ #splitted_str.result - 1 ];
+  split_str.regex = "\\?";
+  split@StringUtils( split_str )( splitted_str );
+  if ( #splitted_str.result > 1 ) {
+      __str_elements.element[ #__str_elements.element - 1] = splitted_str.result [ 0 ];
+      split_str = splitted_str.result[ 1 ];
+      split_str.regex = "&";
+      split@StringUtils( split_str )( splitted_str );
+      for( _s = 0, _s < #splitted_str.result, _s++ ) {
+          split_str2 = splitted_str.result[ _s ];
+          split_str2.regex = "=";
+          split@StringUtils( split_str2 )( splitted_str2 );
+          __str_elements.element[ #__str_elements.element ]  = splitted_str2.result[ 1 ]
+      }
+  }
 }
 
-init
-{
-	config( config )() {
-		routes -> config.routes;
-		resource -> config.resources[i];
-		for( i = 0, i < #config.resources, i++ ) {
-			addResourceRoutes
+define matchTemplate {
+	/* __input_str */
+
+  undef( template_elements );
+	split_urls;
+	template_elements << __str_elements;
+	found = false;
+	if ( #template_elements.element == #uri_elements.element ) {
+		found = true;
+		_e = 0;
+		while( found && _e < #uri_elements.element ) {
+				if ( uri_elements.element[ _e ] != template_elements.element[ _e ] ) {
+						w = template_elements.element[ _e ];
+						w.regex = "\\{(.*)\\}";
+						find@StringUtils( w )( is_param );
+						if ( is_param == 0 ) {
+								found = false
+						} else {
+								found.( is_param.group[1] ) = uri_elements.element[ _e ]
+						}
+				}
+				;
+				_e++
 		}
 	}
+
 }
 
 define findRoute
 {
+	__input_str = request.requestUri;
+	split_urls;
+	uri_elements << __str_elements;
 	for( i = 0, i < #routes && !found, i++ ) {
 		if ( routes[i].method == method ) {
-			match@UriTemplates( {
-				.uri = request.requestUri,
-				.template = routes[i].template
-			} )( found );
-			op = routes[i].operation
+			__input_str = routes[i].template;
+			matchTemplate;
+			op = routes[i].operation;
+			outputPort = routes[i].outputPort;
+			undef( cast );
+			cast << routes[i].cast
 		}
 	}
 }
@@ -116,20 +135,36 @@ define findRoute
 define route
 {
 	findRoute;
+
 	if ( !found ) {
 		statusCode = 404
 	} else {
 		statusCode = 200;
 		with( invokeReq ) {
 			.operation = op;
-			.outputPort = "App"
+			.outputPort = outputPort
 		};
-		foreach( n : found ) {
-			invokeReq.data.(n) << found.(n)
-		};
+
 		foreach( n : request.data ) {
 			invokeReq.data.(n) << request.data.(n)
 		};
+		foreach( n : found ) {
+			if ( is_defined( cast.( n ) ) ) {
+					if ( cast.( n ) == "int" ) {
+						invokeReq.data.(n) = int( found.(n) )
+					} else if ( cast.( n ) == "long" ) {
+						invokeReq.data.(n) = long( found.(n) )
+					} else if ( cast.( n ) == "double" ) {
+						invokeReq.data.(n) = double( found.(n) )
+					} else if ( cast.( n ) == "bool" ) {
+						invokeReq.data.(n) = bool( found.(n) )
+					}
+			} else {
+				  /* all the other cases */
+					invokeReq.data.(n) << found.(n)
+		  }
+		};
+
 		invoke@Reflection( invokeReq )( response )
 	}
 }
@@ -148,6 +183,12 @@ define makeLink
 	}
 }
 
+init {
+	for( r = 0, r < #routes, r++ ) {
+			println@Console( "Loaded " + routes[ r ].template )()
+	}
+}
+
 main
 {
 	[ get( request )( response ) {
@@ -161,7 +202,7 @@ main
 	} ]
 
 	[ put( request )( response ) {
-		method = "post";
+		method = "put";
 		route
 	} ]
 
@@ -170,10 +211,15 @@ main
 		route
 	} ]
 
+	[ options( request )( response ) {
+		response = ""
+	}]
+
 	[ makeLink( request )( response ) {
 		if ( !is_defined( request.method ) ) {
 			request.method = "get"
 		};
 		makeLink
 	} ]
+
 }
