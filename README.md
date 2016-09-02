@@ -1,7 +1,7 @@
-# Jester (required Jolie 1.6.0 Beta or greater)
+# Jester (Jolie 1.6.0 Beta or greater required)
 Jester - the Jolie rEST routER (and related tools)
 
-# tools/jolie2rest (required Jolie 1.6.0 Beta or greater)
+# tools/jolie2rest (Jolie 1.6.0 Beta or greater required)
 This tool allows for the creation of:
 - a declaration for the REST router in order to automatically publish an existing jolie microservice into the router
 - a Swagger interface which reports all the API published in the router
