@@ -1,6 +1,6 @@
 /*
 The MIT License (MIT)
-Copyright (c) 2016 Fabrizio Montesi <famontesi@gmail.com>
+Copyright (c) 2016 Claudio Guidi <guidiclaudio@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -20,33 +20,18 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-type MakeLinkRequest:void {
-	.operation:string
-	.params:undefined
-	.method?:string // default: get
+
+include "types/role_types.iol"
+
+type GetSchemasResponse: void {
+  .definitions*: undefined
 }
 
-type Route:void {
-	.method:string
-	.template:string
-	.operation:string
-}
-
-type Resource:void {
-	.name:string
-	.id:string
-	.template:string
-}
-
-type Config:void {
-	.host:string
-	.outputPort:string
-	.routes*:Route
-	.resources*:Resource
-}
-
-interface RouterIface {
-RequestResponse:
-	config(Config)(void),
-	makeLink(MakeLinkRequest)(string) throws BindingNotFound(void)
+interface JSONSchemaGeneratorInterface {
+ RequestResponse:
+   getSchemas( Interface )( GetSchemasResponse ),
+   getType( Type )( undefined ),
+   getTypeInLine( Type )( undefined ),
+   getSubType( SubType )( undefined ),
+   getNativeType( NativeType )( undefined )
 }
