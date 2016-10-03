@@ -101,7 +101,7 @@ Go into folder tools and launch the following command:
 jolie jolie2rest.ol localhost:8080 swagger_enable=true easy_interface=false
 ```
 Copy the file `router_import.ol` into folder router.
-Copy the filw swagger_DEMO.json in the folder where your SwaggerUI application can retrieve it. If you are using Leonardo just put it inside folder www.
+Copy the file swagger_DEMO.json in the folder where your SwaggerUI application can retrieve it. If you are using Leonardo just put it inside folder www.
 Go into the folder tools/demo and launch the demo microservice:
 ```
 jolie demo.ol

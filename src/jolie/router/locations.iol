@@ -21,5 +21,5 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 constants {
-  API_ROUTER = "socket://localhost:8080"
+  API_ROUTER = "socket://localhost:9080"
 }
