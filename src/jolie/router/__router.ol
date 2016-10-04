@@ -42,7 +42,7 @@ RequestResponse:
 inputPort WebInput {
 Location: API_ROUTER
 Protocol: http {
-	.debug=true;.debug.showContent=true;
+	.debug=false;.debug.showContent=false;
 	.default.get = "get";
 	.default.post = "post";
 	.default.put = "put";

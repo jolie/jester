@@ -22,6 +22,7 @@ include "protocols/http.iol"
 include "public/interfaces/FrontendInterface.iol"
 
 include "config.iol"
+include "../dependencies.iol"
 
 execution { concurrent }
 
@@ -29,6 +30,7 @@ interface HTTPInterface {
 RequestResponse:
 	default(DefaultOperationHttpRequest)(undefined)
 }
+
 
 outputPort Frontend {
 	Interfaces: FrontendInterface
@@ -57,11 +59,19 @@ Aggregates: Frontend
 
 init
 {
-	if ( is_defined( args[0] ) ) {
-		documentRootDirectory = args[0]
-	} else {
+	if ( is_defined( args[0] ) && args[0]=="single" ) {
+		RESOURCE_COLLECTION_FOLDER = "../resource_collections/";
 		documentRootDirectory = RootContentDirectory
+	} else {
+		RESOURCE_COLLECTION_FOLDER = "./resource_collections/";
+		documentRootDirectory = "./webapp/www/"
 	}
+	;
+	rep = JDEP_API_ROUTER;
+	rep.regex = "socket://";
+	rep.replacement = "";
+	replaceAll@StringUtils( rep )( api_router_location );
+	println@Console("Api Interfaces Web Application is running...")()
 }
 
 main
@@ -91,8 +101,10 @@ main
 			spl.regex = "\\.";
 			split@StringUtils( spl )( spl_res );
 
+			json = false;
 			if ( spl_res.result[1] == "json" ) {
-				file.filename = "../router/resource_collections/" + s.result[0]
+				file.filename = RESOURCE_COLLECTION_FOLDER + s.result[0];
+				json = true
 			} else {
 				file.filename = documentRootDirectory + s.result[0]
 			};
@@ -106,10 +118,13 @@ main
 			} else {
 				file.format = format = "binary"
 			};
-
-
-
-			readFile@File( file )( response )
+			readFile@File( file )( response );
+			if ( json ) {
+					rep = string( response );
+					rep.regex = "\"host\":\".*?\"";
+					rep.replacement = "\"host\":\"" + api_router_location + "\"";
+					replaceAll@StringUtils( rep )( response )
+			}
 		}
 	} ] { nullProcess }
 }

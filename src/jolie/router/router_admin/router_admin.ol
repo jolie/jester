@@ -6,7 +6,7 @@ include "public/interfaces/RouterAdminInterface.iol"
 include "../tools/Jolie2RestServiceInterface.iol"
 
 include "locations.iol"
-include "../router/dependencies.iol"
+include "../dependencies.iol"
 
 execution{ concurrent }
 
@@ -30,13 +30,13 @@ embedded {
 }
 
 init {
-  if ( #args > 0 ) {
-    ROUTER_FOLDER = args[0]
+  if ( #args > 0 && args[0]=="single") {
+    ROUTER_FOLDER = "../"
   } else {
-    ROUTER_FOLDER = "."
+    ROUTER_FOLDER = "./"
   };
   println@Console( "RouterAdmin: Router folder set to " + ROUTER_FOLDER )();
-  RESOURCE_COLLECTION_FOLDER = ROUTER_FOLDER + "/" + RESOURCE_COLLECTION_FOLDER_NAME;
+  RESOURCE_COLLECTION_FOLDER = ROUTER_FOLDER + RESOURCE_COLLECTION_FOLDER_NAME;
   println@Console("RouterAdmin is running...")();
   install( ResourceCollectionNameAlreadyExists => nullProcess )
 }

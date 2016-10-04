@@ -11,7 +11,7 @@ inputPort Frontend {
 }
 
 constants {
-  RESOURCE_COLLECTION_FOLDER_NAME = "../router/resource_collections"
+  RESOURCE_COLLECTION_FOLDER_NAME = "./resource_collections"
 }
 
 

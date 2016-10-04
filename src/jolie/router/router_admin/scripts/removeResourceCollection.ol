@@ -3,7 +3,7 @@ include "file.iol"
 
 main {
   with( rq ) {
-      .name = "demo2"
+      .name = "demo"
   };
   removeResourceCollection@RouterAdmin( rq )()
 

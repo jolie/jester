@@ -7,6 +7,10 @@ constants {
 }
 
 init {
+  exists@File( RESOURCE_COLLECTION_FOLDER_NAME )( exist_resource_folder );
+  if ( !exist_resource_folder ) {
+      mkdir@File( RESOURCE_COLLECTION_FOLDER_NAME )()
+  };
   lrq.directory = RESOURCE_COLLECTION_FOLDER_NAME;
   lrq.regex = ".*\\.ol";
   list@File( lrq )( resource_list );
@@ -33,7 +37,12 @@ main {
   f.type = "Jolie";
   loadEmbeddedService@Runtime( f )();
 
-  f.filepath = "../router_admin/router_admin.ol";
+  f.filepath = "./router_admin/router_admin.ol";
+  f.type = "Jolie";
+  loadEmbeddedService@Runtime( f )();
+
+  copyDir@File( { .from="./webapp/META-INF", .to="./META-INF"})();
+  f.filepath = "./webapp/leonardo.ol";
   f.type = "Jolie";
   loadEmbeddedService@Runtime( f )();
 
