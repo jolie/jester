@@ -101,7 +101,7 @@ Go into folder tools and launch the following command:
 jolie jolie2rest.ol localhost:8080 swagger_enable=true easy_interface=false
 ```
 Copy the file `router_import.ol` into folder router.
-Copy the filw swagger_DEMO.json in the folder where your SwaggerUI application can retrieve it. If you are using Leonardo just put it inside folder www.
+Copy the file swagger_DEMO.json in the folder where your SwaggerUI application can retrieve it. If you are using Leonardo just put it inside folder www.
 Go into the folder tools/demo and launch the demo microservice:
 ```
 jolie demo.ol
@@ -155,3 +155,37 @@ and look at the reply printed out in the console.
 
 NOTE:
 Only application/json APIs are enabled so far
+
+#Router Admin
+The router comes with a router admin service which is executed together in order to allow for a remote administration of the router. In particular, the router admin exposes three operations:
+- getRegisteredResourceCollections: it returns the list of all the registered resource collections into the router;
+- addResourceCollection: it adds a resource collection into the router;
+- removeResourceCollection: it removes a resource collection from the router;
+
+The resource collections are expressed by means of a jolie interface declaration where the
+REST api templates are described as in the previous section "REST annotations on the jolie interface".
+The fully description of the operations may be consulted in the file RouterAdminInterface.iol which is located in the sub-folder router_admin/public/interfaces.
+
+In the sub-folder router_admin/scripts there are three client scripts which allows for the interaction with the router admin operations.
+
+WARNING: every time a resource collection is modified, the router requires to be restarted in order to get the modifications.
+
+#Available API list web application
+A web application which uses some libraries from Swagger UI (http://swagger.io/swagger-ui/) is exeecuted together with the router and the router admin. It automatically reads the registered resource collections and it provides the list into a web application located at port 9082 by default.
+Thus, if you execute the web application on your localhost the URL is:
+```
+http://localhost:9082
+```
+
+#Dockerization of the router
+Jester can be easily dockerized by exploiting the Dockerfile distributed together with the source code. In order to achieve it, docker must be previously installed in the host machine then just follow these steps:
+- go into folder router;
+- run the command `docker build -t jester .` which locally creates the docker image of jester;
+- run the command `docker run --name jester-cnt --net="host" -e JDEP_API_ROUTER="socket://127.0.0.1:9080" jester` to run the container starting from the image just created;
+
+The option `--net="host"` will allow the container to directly exploit the network of the host machine. If you want to limit the port exposition, remember that jester requires three main ports:
+- 9080: it is the http port of the router, all the REST APIs are available on it
+- 9081: it is the sodep port of the router admin, if you want to add, remove or get the list of the registered resource collections, you need to use it
+- 9082: it is the http port of the API list web application
+
+The environment variable JDEP_API_ROUTER must be set to the location of the router as it is addressed from a final user, thus put the external IP and the exposed port number. 

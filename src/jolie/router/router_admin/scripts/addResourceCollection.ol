@@ -19,7 +19,16 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
+include "head.iol"
+include "file.iol"
 
-constants {
-  API_ROUTER = "socket://localhost:9080"
+main {
+  with( rq ) {
+      .name = "demo";
+      .location = "socket://localhost:11000";
+      .interface_name = "DemoInterface"
+  };
+  readFile@File( { .filename="../../tools/demo/DemoInterface.iol" })( rq.interface );
+  addResourceCollection@RouterAdmin( rq )()
+
 }

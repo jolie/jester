@@ -20,6 +20,31 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+include "public/interfaces/FrontendInterface.iol"
+include "file.iol"
+include "console.iol"
+include "string_utils.iol"
+
+execution{ concurrent }
+
+inputPort Frontend {
+  Location: "local"
+  Interfaces: FrontendInterface
+}
+
 constants {
-  API_ROUTER = "socket://localhost:9080"
+  RESOURCE_COLLECTION_FOLDER_NAME = "./resource_collections"
+}
+
+
+main {
+  [ getInterfaces( request )( response ) {
+    lrq.directory = RESOURCE_COLLECTION_FOLDER_NAME;
+    lrq.regex = ".*\\.json";
+    list@File( lrq )( resource_list );
+    __import = "";
+    for( i = 0, i < #resource_list.result, i++ ) {
+        response.name[ i ] = resource_list.result[ i ]
+    }
+  }]
 }

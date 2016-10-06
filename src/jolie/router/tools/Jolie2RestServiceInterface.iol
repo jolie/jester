@@ -20,6 +20,19 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-constants {
-  API_ROUTER = "socket://localhost:9080"
+type RunJolie2ServiceRequest: void {
+  .router_host: string
+  .swagger_enable: bool
+  .easy_interface: bool
+  .wkdir: string
+  .service*: void {
+    .filename: string
+    .input_port: string
+  }
+}
+
+
+interface Jolie2RestServiceInterface {
+  RequestResponse:
+    run( RunJolie2ServiceRequest )( void ) throws DefinitionError( string )
 }

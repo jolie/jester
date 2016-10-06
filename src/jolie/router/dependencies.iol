@@ -1,0 +1,1 @@
+constants { JDEP_API_ROUTER="socket://localhost:9080" }

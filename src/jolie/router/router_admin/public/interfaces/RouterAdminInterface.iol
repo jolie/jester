@@ -20,6 +20,42 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-constants {
-  API_ROUTER = "socket://localhost:9080"
+type Route: void {
+  .method: string
+  .template: string
+  .operation: string
+}
+
+type AddResourceCollectionRequest: void {
+  .name: string
+  .location: string
+  .interface: string
+  .interface_name: string
+}
+
+type GetRegisteredResourceCollectionsResponse: void {
+  .resource_collection*: void {
+      .name: string
+      .surface: string
+  }
+}
+
+type RemoveResourceCollectionRequest: void {
+  .name: string
+}
+
+
+interface RouterAdminInterface {
+  RequestResponse:
+
+    getRegisteredResourceCollections( void )( GetRegisteredResourceCollectionsResponse ),
+
+    /*
+      It adds a new collection resource to the router. The router must be restarted
+    */
+    addResourceCollection( AddResourceCollectionRequest )( void )
+      throws ResourceCollectionNameAlreadyExists DefinitionError( string ),
+
+    removeResourceCollection( RemoveResourceCollectionRequest )( void )
+      throws ResourceCollectionNameDoesNotExist
 }

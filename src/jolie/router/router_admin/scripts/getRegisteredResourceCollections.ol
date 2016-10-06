@@ -1,3 +1,4 @@
+
 /*
 The MIT License (MIT)
 Copyright (c) 2016 Claudio Guidi <guidiclaudio@gmail.com>
@@ -20,6 +21,12 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-constants {
-  API_ROUTER = "socket://localhost:9080"
+include "head.iol"
+include "file.iol"
+
+
+main {
+  getRegisteredResourceCollections@RouterAdmin(  )( res );
+  valueToPrettyString@StringUtils( res )( s );
+  println@Console( s )()
 }
