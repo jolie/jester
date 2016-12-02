@@ -268,10 +268,33 @@ main {
           scope( get_definition ) {
               install( DefinitionError => println@Console("Error for type " + request.name )() );
               if ( request.definition.type == "object" ) {
-                  rq_obj.definition -> request.definition; rq_obj.indentation = 1;
-                  getJolieDefinitionFromSwaggerObject@MySelf( rq_obj )( object );
-                  response = "type " + __cleaned_name + ": void {\n";
-                  response = response + object + "}\n"
+                  if ( #request.definition.properties == 0 ) {
+                      response = "type " + __cleaned_name + ": undefined \n"
+                  } else {
+                      rq_obj.definition -> request.definition; rq_obj.indentation = 1;
+                      getJolieDefinitionFromSwaggerObject@MySelf( rq_obj )( object );
+                      response = "type " + __cleaned_name + ": void {\n";
+                      response = response + object + "}\n"
+                  }
+              } else {
+                if ( #request.definition.properties == 0 ) {
+                      nt.type = request.definition.type;
+                      getJolieNativeTypeFromSwaggerNativeType@MySelf( nt )( native_type );
+                      min = "0"; max = "*";
+                      if ( is_defined( request.definition.minimum ) ) {
+                          min = request.definition.minimum
+                      };
+                      if ( is_defined( request.definition.maximum ) ) {
+                          max = request.definition.maximum
+                      };
+                      response = "type " + __cleaned_name + "[" + min + "," + max + "]:" + native_type + "\n"
+                } else {
+                    rq_obj.definition -> request.definition; rq_obj.indentation = 1;
+                    getJolieDefinitionFromSwaggerObject@MySelf( rq_obj )( object );
+                    response = "type " + __cleaned_name + ": void {\n";
+                    response = response + object + "}\n"
+                }
+
               }
           }
     }]
@@ -361,6 +384,9 @@ main {
               };
               if ( request.format == "int64" ) {
                   response = "long"
+              };
+              if ( !is_defined( request.format ) ) {
+                  response = "int"
               }
           }
     }]
