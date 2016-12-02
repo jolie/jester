@@ -53,6 +53,9 @@ embedded {
     "swagger/swagger_definition.ol" in SwaggerDefinition
 }
 
+init {
+    registerForInput@Console()()
+}
 
 main {
     if ( #args != 3 ) {
@@ -121,7 +124,7 @@ main {
       getDefinition@HTTPS()( swagger )
     };
 
-    spl = swagger.host;
+    spl = string( swagger.host );
     spl.regex = ":";
     split@StringUtils( spl )( ports );
     if ( #ports.result == 1 ) {
@@ -137,7 +140,7 @@ main {
     foreach( path : swagger.paths ) {
         foreach( method : swagger.paths.( path ) ) {
             if ( !is_defined( swagger.paths.( path ).( method ).operationId ) ) {
-                println@Console( "Path " + path + " does not define an operationId, please insert an operationId for this path.")();
+                println@Console( "Path " + method + ":" + path + " does not define an operationId, please insert an operationId for this path.")();
                 print@Console(">")();
                 in( operationId )
             } else {
